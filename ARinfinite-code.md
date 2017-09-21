@@ -1,17 +1,9 @@
----
-title: "ARInfinecoefficientCalculation"
-author: "Thiyanga Talagala"
-date: "September 21, 2017"
-output: rmarkdown::github_document
----
+ARInfinecoefficientCalculation
+================
+Thiyanga Talagala
+September 21, 2017
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
-
-
-
-```{r}
+``` r
 library(ggplot2)
 library(forecast)
 ##################################
@@ -178,8 +170,11 @@ dist_calrw=function(n){ # n - number of simulations
 dist_calrw(100)
 dfs <- stack(d)
 ggplot(dfs, aes(x=values)) + geom_density(aes(group=ind, colour=ind, fill=ind), alpha=0.3)
+```
 
+![](ARinfinite-code_files/figure-markdown_github-ascii_identifiers/unnamed-chunk-1-1.png)
 
+``` r
 ######################################
 # 2. AR(1) phi = 0.9 vs AR(1) phi=0.5#
 ######################################
@@ -214,9 +209,11 @@ dist_calAR=function(n){ # n - number of simulations
 dist_calAR(100)
 dfs <- stack(d)
 ggplot(dfs, aes(x=values)) + geom_density(aes(group=ind, colour=ind, fill=ind), alpha=0.3)
+```
 
+![](ARinfinite-code_files/figure-markdown_github-ascii_identifiers/unnamed-chunk-1-2.png)
 
-
+``` r
 ########################################
 # 3. AR(1) phi = 0.9 vs MA(1) theta=0.5#
 ########################################
@@ -251,7 +248,11 @@ dist_calAM=function(n){ # n - number of simulations
 dist_calAR(100)
 dfs <- stack(d)
 ggplot(dfs, aes(x=values)) + geom_density(aes(group=ind, colour=ind, fill=ind), alpha=0.3)
+```
 
+![](ARinfinite-code_files/figure-markdown_github-ascii_identifiers/unnamed-chunk-1-3.png)
+
+``` r
 #############################################
 # 4. AR(1) phi = 0.9 vs ARIMA(1,1,0) phi=0.5#
 #############################################
@@ -286,8 +287,11 @@ dist_calARIMA=function(n){ # n - number of simulations
 dist_calARIMA(100)
 dfs <- stack(d)
 ggplot(dfs, aes(x=values)) + geom_density(aes(group=ind, colour=ind, fill=ind), alpha=0.3)
+```
 
+![](ARinfinite-code_files/figure-markdown_github-ascii_identifiers/unnamed-chunk-1-4.png)
 
+``` r
 ################################
 # 5. ARMA(1,1) vs ARIMA(1,1,1) #
 ################################
@@ -321,8 +325,6 @@ dist_calARIMA=function(n){ # n - number of simulations
 dist_calARIMA(100)
 dfs <- stack(d)
 ggplot(dfs, aes(x=values)) + geom_density(aes(group=ind, colour=ind, fill=ind), alpha=0.3)
-
-
 ```
 
-
+![](ARinfinite-code_files/figure-markdown_github-ascii_identifiers/unnamed-chunk-1-5.png)
