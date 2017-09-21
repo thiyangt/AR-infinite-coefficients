@@ -328,3 +328,285 @@ ggplot(dfs, aes(x=values)) + geom_density(aes(group=ind, colour=ind, fill=ind), 
 ```
 
 ![](ARinfinite-code_files/figure-markdown_github-ascii_identifiers/unnamed-chunk-1-5.png)
+
+``` r
+# Periodogram based metric - unequal length
+library(ggplot2)
+
+pmetric = function(s,l){ 
+  # s - short time seres
+  #l - longer time series
+
+  lengthS<-length(s)
+  lengthL<-length(l)
+  
+  pL=abs(fft(l)/sqrt(lengthL))^2
+  spL=(4/(lengthL/2))*pL
+  
+  freqS=0:(lengthS/2)/lengthS
+  pS=abs(fft(s)/sqrt(lengthS))^2
+  spS=(4/(lengthS/2))*pS
+  
+  pS1=spS[1:((lengthS/2)+1)]
+  
+  freqL=0:(lengthL/2)/lengthL
+  pSNew<-approx(freqS,pS1,freqL)
+  
+  NL=spL[1:((lengthL/2)+1)]/var(l)
+  NS=pSNew$y/var(s)
+  metric= sqrt((sum((log(NL)-log(NS))^2)))*(1/(lengthL/2)+1)
+  metric
+  
+}
+ 
+###################################
+# 1. random walk vs White noise   #
+###################################
+
+pmetric_rw=function(n){ # n - number of simulations 
+  
+  RR<<-rep(NA,n)
+  RW<<-rep(NA,n)
+  WW<<-rep(NA,n)
+  
+  d<- data.frame(WW,RW,RR)
+  
+  for (i in 1:n){
+    
+    w1<-rnorm(100,0,1)# white noise series - 1(length 100)
+    w2<-rnorm(120,0,1)# white noise series - 2(length 120)
+    
+    r1<-cumsum(rnorm(80,0,1))# random walk series - 1(length 80)
+    r2 <- cumsum(rnorm(110,0,1))# random walk series - 2(length 110)
+    
+    
+    #-----------------------------------------------------------------------------
+    
+    WW[i] <-pmetric(s=w1,l=w2)
+    RW[i] <-pmetric(l=w1,s=r1)
+    RR[i] <-pmetric(s=r1,l=r2)
+    
+  }
+  
+  d<<- data.frame(WW,RW,RR)
+  
+}
+
+
+
+
+pmetric_rw(1000)
+dfs <- stack(d)
+ggplot(dfs, aes(x=values)) + geom_density(aes(group=ind, colour=ind, fill=ind), alpha=0.3)
+```
+
+![](ARinfinite-code_files/figure-markdown_github-ascii_identifiers/unnamed-chunk-2-1.png)
+
+``` r
+######################################
+# 2. AR(1) phi = 0.9 vs AR(1) phi=0.5#
+######################################
+
+
+pmetric_AR1=function(n){ # n - number of simulations 
+  
+  AA<<-rep(NA,n)
+  AB<<-rep(NA,n)
+  BB<<-rep(NA,n)
+  
+  d<- data.frame(WW,RW,RR)
+  
+  for (i in 1:n){
+    
+    AR1_0.9<-arima.sim(list(order = c(1,0,0), ar = 0.9), n = 200)# (length 100)
+    AR2_0.9<-arima.sim(list(order = c(1,0,0), ar = 0.9), n = 120)# (length 120)
+    
+    AR1_0.5<-arima.sim(list(order = c(1,0,0), ar = 0.5), n = 80)#(length 80)
+    AR2_0.5<-arima.sim(list(order = c(1,0,0), ar = 0.5), n = 110)#(length 110)
+    
+    
+    AA[i] <-pmetric(l=AR1_0.9,s=AR2_0.9)
+    AB[i] <-pmetric(l=AR1_0.9, s=AR1_0.5)
+    BB[i] <-pmetric( s=AR1_0.5,l=AR2_0.5)
+    
+  }
+  
+  d<<- data.frame(AA,AB,BB)
+  
+}
+
+
+
+
+pmetric_AR1(1000)
+dfs <- stack(d)
+ggplot(dfs, aes(x=values)) + geom_density(aes(group=ind, colour=ind, fill=ind), alpha=0.3)
+```
+
+![](ARinfinite-code_files/figure-markdown_github-ascii_identifiers/unnamed-chunk-2-2.png)
+
+``` r
+########################################
+# 3. AR(1) phi = 0.9 vs MA(1) theta=0.5#
+########################################
+
+
+pmetric_AR2=function(n){ # n - number of simulations 
+  
+  AA<<-rep(NA,n)
+  AB<<-rep(NA,n)
+  BB<<-rep(NA,n)
+  
+  d<- data.frame(WW,RW,RR)
+  
+  for (i in 1:n){
+    
+    AR1_0.9<-arima.sim(list(order = c(1,0,0), ar = 0.9), n = 200)# (length 100)
+    AR2_0.9<-arima.sim(list(order = c(1,0,0), ar = 0.9), n = 120)# (length 120)
+    
+    MA1_0.5<-arima.sim(list(order = c(0,0,1), ma = 0.5), n = 80)#(length 80)
+    MA2_0.5<-arima.sim(list(order = c(0,0,1), ma = 0.5), n = 110)#(length 110)
+    
+    
+    AA[i] <-pmetric(l=AR1_0.9,s=AR2_0.9)
+    AB[i] <-pmetric(l=AR1_0.9, s=MA1_0.5)
+    BB[i] <-pmetric( s=MA1_0.5,l=MA2_0.5)
+    
+  }
+  
+  d<<- data.frame(AA,AB,BB)
+  
+}
+
+
+
+
+pmetric_AR2(1000)
+dfs <- stack(d)
+ggplot(dfs, aes(x=values)) + geom_density(aes(group=ind, colour=ind, fill=ind), alpha=0.3)
+```
+
+![](ARinfinite-code_files/figure-markdown_github-ascii_identifiers/unnamed-chunk-2-3.png)
+
+``` r
+#############################################
+# 5. AR(1) phi = 0.5 vs ARIMA(1,1,0) phi=0.5#
+#############################################
+
+pmetric_ARIMA=function(n){ # n - number of simulations 
+  
+  AA<<-rep(NA,n)
+  AB<<-rep(NA,n)
+  BB<<-rep(NA,n)
+  
+  d<- data.frame(WW,RW,RR)
+  
+  for (i in 1:n){
+    
+    AR1<-arima.sim(list(order = c(1,0,0), ar = 0.5), n = 200)# (length 200)
+    AR2<-arima.sim(list(order = c(1,0,0), ar = 0.5), n = 120)# (length 120)
+    
+    
+    AR1_0.5<-arima.sim(list(order = c(1,1,0), ar = 0.5), n = 79)
+    AR2_0.5<-arima.sim(list(order = c(1,1,0), ar = 0.5), n = 109)
+
+    
+    AA[i] <-pmetric(l=AR1,s=AR2)
+    AB[i] <-pmetric(l=AR1, s=AR1_0.5)
+    BB[i] <-pmetric( s=AR1_0.5,l=AR2_0.5)
+    
+  }
+  
+  d<<- data.frame(AA,AB,BB)
+  
+}
+
+
+pmetric_ARIMA(1000)
+dfs <- stack(d)
+ggplot(dfs, aes(x=values)) + geom_density(aes(group=ind, colour=ind, fill=ind), alpha=0.3)
+```
+
+![](ARinfinite-code_files/figure-markdown_github-ascii_identifiers/unnamed-chunk-2-4.png)
+
+``` r
+#############################################
+# 5. AR(1) phi = 0.9 vs ARIMA(1,1,0) phi=0.5#
+#############################################
+
+pmetric_ARIMA=function(n){ # n - number of simulations 
+  
+  AA<<-rep(NA,n)
+  AB<<-rep(NA,n)
+  BB<<-rep(NA,n)
+  
+  d<- data.frame(WW,RW,RR)
+  
+  for (i in 1:n){
+    
+    AR1_0.9<-arima.sim(list(order = c(1,0,0), ar = 0.9), n = 200)# (length 200)
+    AR2_0.9<-arima.sim(list(order = c(1,0,0), ar = 0.9), n = 120)# (length 120)
+    
+    
+    AR1_0.5<-arima.sim(list(order = c(1,1,0), ar = 0.5), n = 79)
+    AR2_0.5<-arima.sim(list(order = c(1,1,0), ar = 0.5), n = 109)
+
+    
+    AA[i] <-pmetric(l=AR1_0.9,s=AR2_0.9)
+    AB[i] <-pmetric(l=AR1_0.9, s=AR1_0.5)
+    BB[i] <-pmetric( s=AR1_0.5,l=AR2_0.5)
+    
+  }
+  
+  d<<- data.frame(AA,AB,BB)
+  
+}
+
+
+pmetric_ARIMA(1000)
+dfs <- stack(d)
+ggplot(dfs, aes(x=values)) + geom_density(aes(group=ind, colour=ind, fill=ind), alpha=0.3)
+```
+
+![](ARinfinite-code_files/figure-markdown_github-ascii_identifiers/unnamed-chunk-2-5.png)
+
+``` r
+#################################################
+# 5. MA(1) theta = 0.5 vs ARIMA(0,1,1) theta=0.5#
+#################################################
+
+pmetric_ARIMA=function(n){ # n - number of simulations 
+  
+  AA<<-rep(NA,n)
+  AB<<-rep(NA,n)
+  BB<<-rep(NA,n)
+  
+  d<- data.frame(WW,RW,RR)
+  
+  for (i in 1:n){
+    
+    MA1<-arima.sim(list(order = c(0,0,1), ma = 0.5), n = 200)# (length 200)
+    MA2<-arima.sim(list(order = c(0,0,1), ma = 0.5), n = 120)# (length 120)
+    
+    
+    ARIMA1<-arima.sim(list(order = c(0,1,1), ma = 0.5), n = 79)
+    ARIMA2<-arima.sim(list(order = c(0,1,1), ma = 0.5), n = 109)
+    
+    
+    AA[i] <-pmetric(l=MA1,s=MA2)
+    AB[i] <-pmetric(l=MA1, s=ARIMA1)
+    BB[i] <-pmetric( s=ARIMA1,l=ARIMA2)
+    
+  }
+  
+  d<<- data.frame(AA,AB,BB)
+  
+}
+
+
+pmetric_ARIMA(1000)
+dfs <- stack(d)
+ggplot(dfs, aes(x=values)) + geom_density(aes(group=ind, colour=ind, fill=ind), alpha=0.3)
+```
+
+![](ARinfinite-code_files/figure-markdown_github-ascii_identifiers/unnamed-chunk-2-6.png)
