@@ -1,0 +1,149 @@
+---
+title: "SARIMA pi coefficients"
+author: "Thiyanga Talagala"
+date: "September 21, 2017"
+output: rmarkdown::github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(polynom)
+library(ggplot2)
+#warning-npi should be geater than or equal to s
+convet_SARMA_or_S_ARIMA<-function(ar_c=0,d=0,ma_c=0,sar_c=0,D=0,sma_c=0,s=12,npi=25){
+#seasonality, 12-monthly, 4-quartely, 7-weekly, etc.
+#x-backshift operator B
+#ar-non seasonal ar part
+#diff-non seasonal difference order
+#ma-non seasonal ma part
+#sar-seasonal ar part
+#sdiff-seasonal difference order
+#sma-seasonal ma part
+  
+#npi-number of pi coefficients need to calculate
+p<-length(ar_c)
+ar=-1*ar_c
+#ma=-1*ma_c
+#non-seasonal part
+ar<-polynomial(c(1,ar))
+backshift_nonseasonal<-polynomial(c(1,-1))
+diff<-backshift_nonseasonal^d
+#seasonal part
+a=length(sar_c)
+b=s*a
+seasonal_poly=rep(0,b)
+for(i in 1:a){
+seasonal_position=s*i
+seasonal_poly[seasonal_position]=sar_c[i]
+}
+sar=-1*seasonal_poly
+sar<-polynomial(c(1,sar))
+sbackshift_seasonal<-polynomial(c(1,rep(0,s-1),-1))
+sdiff<-sbackshift_seasonal^D
+if(ar_c!=0){ar=ar} else {ar=1}
+LHS_poly<-ar*sar*diff*sdiff
+LHS_coef<-coef(LHS_poly)#extract the coefficients of RHS_poly
+if(length(LHS_coef)==1){LHS_coef=rep(0,npi+1)}
+LHS_B_coef<-LHS_coef[-1]#extract the B coefficients of RHS and store it into a matrix
+LHS_B_coef_length=length( LHS_B_coef)
+if(LHS_B_coef_length!=npi){
+zero_mat1<- matrix( rep(0,npi),nrow=npi, ncol=1)
+for (i in 1:LHS_B_coef_length){
+zero_mat1[i,1]<-LHS_B_coef[i]
+i=i+1
+}
+LHS1<-zero_mat1
+} else {LHS1<-as.matrix(LHS_B_coef)}
+length_ma_c=length(ma_c)
+initial_pi1<-c(rep(0,npi))
+if (length_ma_c<npi){
+  for (i in 1:length_ma_c){
+initial_pi1[i]<-ma_c[i]
+} }else {
+for (i in 1:npi){
+initial_pi1[i]<-ma_c[i]
+}
+}
+# Number of times that the seasonal component should be repeat
+n_times_repeat_seasonal=npi%/%s
+# add s_theta to corresponding positions
+for(i in 1:n_times_repeat_seasonal){
+if(is.na(sma_c[i])==0){
+seasonal<-i*s
+initial_pi1[seasonal]<-initial_pi1[seasonal]+sma_c[i]
+}
+}
+# now add -ma*Sma terms
+for (k in 1: n_times_repeat_seasonal){
+if(is.na(sma_c[k])==0){
+s<-k*s
+for (i in 1:length_ma_c){
+ma_and_sma=s+i
+if (ma_and_sma<=npi){initial_pi1[ma_and_sma]<-initial_pi1[ma_and_sma]-(ma_c[i]*sma_c[k])}
+}}
+}
+RHS1=as.matrix(initial_pi1)
+#LHS coefficient matrix
+LHS=LHS1+RHS1
+LHS
+length_initial_pi1=length(initial_pi1)
+s_pi<-diag(-1,npi,npi)
+k=2
+for (i in 1: length_initial_pi1){
+if(k<=npi){
+for(j in k:npi){
+s_pi[j,j-i]<-initial_pi1[i]
+}
+k=k+1
+}}
+
+solve(s_pi)%*%LHS
+}
+
+```
+
+```{r}
+pi1<-convet_SARMA_or_S_ARIMA(npi=100,sma_c=c(0.3),sar_c=c(0.2),d=0,s=4)
+pi1
+
+```
+
+```{r}
+index<-1:100
+dfr1<-data.frame(pi1,index)
+ggplot(dfr1,aes(index,pi1))+geom_point(color="firebrick")+geom_line(color="blue")+
+labs(y="pi weights")+labs(title="SARIMA(0,0,0)(0,0,1)_4")
+
+```
+
+```{r}
+pi1<-convet_SARMA_or_S_ARIMA(npi=100,sma_c=c(0.3),sar_c=c(0.4),d=0,s=12)
+pi1
+
+```
+
+```{r}
+index<-1:100
+dfr1<-data.frame(pi1,index)
+ggplot(dfr1,aes(index,pi1))+geom_point(color="firebrick")+geom_line(color="blue")+
+labs(y="pi weights")+labs(title="SARIMA(0,0,0)(1,0,1)_12")
+
+```
+
+```{r}
+pi1<-convet_SARMA_or_S_ARIMA(npi=100,ma_c=c(0.2),sma_c=c(0.3),sar_c=c(0.4),d=1,s=12,D=1)
+pi1
+
+```
+
+```{r}
+index<-1:100
+dfr1<-data.frame(pi1,index)
+ggplot(dfr1,aes(index,pi1))+geom_point(color="firebrick")+geom_line(color="blue")+
+labs(y="pi weights")+labs(title="SARIMA(0,1,1)(1,1,1)_12")
+
+```
+
