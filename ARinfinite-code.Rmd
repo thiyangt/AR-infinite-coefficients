@@ -1,0 +1,256 @@
+---
+title: "ARInfinecoefficientCalculation"
+author: "Thiyanga Talagala"
+date: "September 21, 2017"
+output: rmarkdown::github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+library(rSymPy)
+#sympyStart()# Toavoid the Error in .jcheck() : No running JVM detected. Maybe .jinit() would help.
+
+#%%%%%%%%%%%%%%%%%%%%%%% USER NEEDS TO INCLUDE %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+sympy("phi=-0.3")
+sympy("theta=0.5")
+sympy("sphi=0.4")
+sympy("stheta=0.6")
+sympy("s=12") # seasonlity, monthly, weakly, etc 
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+ARcoef<- function(p=0,q=0,d=0,P=0,Q=0,D=0){
+
+  
+#Theta variables - Non seasonal 
+a1 <- Var("a1")
+a2<- Var("a2")
+a3<- Var("a3")
+a4<- Var("a4")
+a5<- Var("a5")
+a6<- Var("a6")
+a7<- Var("a7")
+a8<- Var("a8")
+a9<- Var("a9")
+a10<- Var("a10")
+
+#Theta variables - Seasonal 
+sa1 <- Var("sa1")
+sa2<- Var("sa2")
+sa3<- Var("sa3")
+sa4<- Var("sa4")
+sa5<- Var("sa5")
+sa6<- Var("sa6")
+sa7<- Var("sa7")
+sa8<- Var("sa8")
+sa9<- Var("sa9")
+sa10<- Var("sa10")
+
+# Bachshift operator
+B <- Var("B")
+
+
+# pi coefficients
+c1 <- Var("c1")
+c2<- Var("c2")
+c3<- Var("c3")
+c4<- Var("c4")
+c5<- Var("c5")
+c6<- Var("c6")
+c7<- Var("c7")
+c8<- Var("c8")
+c9<- Var("c9")
+c10<- Var("c10")
+c11 <- Var("c11")
+c12<- Var("c12")
+c13<- Var("c13")
+c14<- Var("c14")
+c15<- Var("c15")
+c16<- Var("c16")
+c17<- Var("c17")
+c18<- Var("c18")
+c19<- Var("c19")
+c20<- Var("c20")
+c21<- Var("c21")
+c22<- Var("c22")
+c23<- Var("c23")
+c24<- Var("c24")
+c25<- Var("c25")
+
+
+# Fi coefficients - Non seasonal
+
+f1 <- Var("f1")
+f2<- Var("f2")
+f3<- Var("f3")
+f4<- Var("f4")
+f5<- Var("f5")
+f6<- Var("f6")
+f7<- Var("f7")
+f8<- Var("f8")
+f9<- Var("f9")
+f10<- Var("f10")
+
+# Fi coefficients - Seasonal
+
+sf1 <- Var("sf1")
+sf2<- Var("sf2")
+sf3<- Var("sf3")
+sf4<- Var("sf4")
+sf5<- Var("sf5")
+sf6<- Var("sf6")
+sf7<- Var("sf7")
+sf8<- Var("sf8")
+sf9<- Var("sf9")
+sf10<- Var("sf10")
+
+#Non seasonal AR part
+if(p==0){sympy("ar=1")}
+
+if(p==1){
+  sympy("ar=1-f1*B")
+}
+if(p==2){
+  sympy("ar=1-f1*B-f2*B**2")
+}
+if(p==3){
+  sympy("ar=1-f1*B-f2*B**2-f3*B**3")
+}
+if(p==4){
+  sympy("ar=1-f1*B-f2*B**2-f3*B**3-f4*B**4")
+}
+if(p==5){
+  sympy("ar=1-f1*B-f2*B**2-f3*B**3-f4*B**4-f5*B**5")
+}
+
+# Nonseasonal difference part - (1-B)^d
+if (d==0){sympy("diff=1")}
+
+if(d==1){
+  sympy("diff=(1-B)")
+}
+
+if(d==2){
+  sympy("diff=expand((1-B)**2)")
+}
+
+if(d==3){
+  sympy("diff=expand((1-B)**3)")
+}
+
+if(d==4){
+  sympy("diff=expand((1-B)**4)")
+}
+
+# Nonseasonal MA part
+if(q==0){sympy("ma=1")}
+
+if(q==1){
+  sympy("ma=1-a1*B")
+}
+if(q==2){
+  sympy("ma=1-a1*B-a2*B**2")
+}
+if(q==3){
+  sympy("ma=1-a1*B-a2*B**2-a3*B**3")
+}
+if(q==4){
+  sympy("ma=1-a1*B-a2*B**2-a3*B**3-a4*B**4")
+}
+if(q==5){
+  sympy("ma=1-a1*B-a2*B**2-a3*B**3-a4*B**4-a5*B**5")
+}
+
+############### Seasonal ################################################
+
+#seasonal AR part
+if(P==0){sympy("sar=1")}
+
+if(P==1){
+  sympy("sar=1-sf1*B")
+}
+if(P==2){
+  sympy("sar=1-sf1*B-sf2*B**2")
+}
+if(P==3){
+  sympy("sar=1-sf1*B-sf2*B**2-sf3*B**3")
+}
+if(P==4){
+  sympy("sar=1-sf1*B-sf2*B**2-sf3*B**3-sf4*B**4")
+}
+if(P==5){
+  sympy("sar=1-sf1*B-sf2*B**2-sf3*B**3-sf4*B**4-sf5*B**5")
+}
+
+# seasonal difference part - (1-B)^d
+if (D==0){sympy("Diff=1")}
+
+if(D==1){
+  sympy("Diff=(1-B**s)")
+}
+
+if(D==2){
+  sympy("Diff=expand((1-B**s)**2)")
+}
+
+if(D==3){
+  sympy("Diff=expand((1-B**s)**3)")
+}
+
+if(D==4){
+  sympy("Diff=expand((1-B**s)**4)")
+}
+
+# seasonal MA part
+if(Q==0){sympy("sma=1")}
+
+if(Q==1){
+  sympy("sma=1-sa1*B")
+}
+if(Q==2){
+  sympy("sma=1-sa1*B-sa2*B**2")
+}
+if(Q==3){
+  sympy("sma=1-sa1*B-sa2*B**2-sa3*B**3")
+}
+if(Q==4){
+  sympy("sma=1-sa1*B-sa2*B**2-sa3*B**3-sa4*B**4")
+}
+if(Q==5){
+  sympy("sma=1-sa1*B-sa2*B**2-sa3*B**3-sa4*B**4-sa5*B**5")
+}
+
+
+##########################################################################
+
+#pi(B) polynomial
+sympy("pib=1-c1*B-c2*B**2-c3*B**3-c4*B**4-c5*B**5-c6*B**6-c7*B**7-c8*B**8-c9*B**9-c10*B**10-c11*B**11-c12*B**12-c13*B**13-c14*B**14-c15*B**15-c16*B**16-c17*B**17-c18*B**18-c19*B**19-c20*B**20-c21*B**21-c22*B**22-c23*B**23-c24*B**24-c25*B**25")
+
+# LHS
+sympy("LHS=collect(expand(ar*diff*Diff*sar), B)")
+# RHS
+sympy("RHS=collect(expand(pib*ma*sma), B)")
+
+#substitute values for LHS
+LHS<-sympy("LHS.subs([(f1,phi)])")
+
+#substitute values for RHS
+RHS<-sympy("collect(RHS.subs([(a1,theta)]),B)")
+
+
+
+output<-list(LHS,RHS)
+return(output)
+}
+
+
+ARcoef(p=1,q=1,d=1)
+
+####################################################################################################
+
+
+```
+
