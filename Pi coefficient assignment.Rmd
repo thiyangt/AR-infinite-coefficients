@@ -1,0 +1,250 @@
+---
+title: "Pi Coefficient Assignment"
+author: "Thiyanga Talagala"
+date: "September 21, 2017"
+output: rmarkdown::github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+#pi coefficients
+library(polynom)
+convetARMAorARIMA<-function(ar_c=0,d=0,ma_c=0,npi=25){
+#x-backshift operator B
+#ar-non seasonal ar part
+#diff-non seasonal difference order
+#ma-non seasonal ma part
+#npi-number of pi coefficients need to calculate
+p<-length(ar_c)
+ar=-1*ar_c
+ar<-polynomial(c(1,ar))
+backshift_nonseasonal<-polynomial(c(1,-1))
+diff<-backshift_nonseasonal^d
+LHS_poly<-ar*diff
+LHS_coef<-coef(LHS_poly)#extract the coefficients of RHS_poly
+if(length(LHS_coef)==1){LHS_coef=rep(0,npi+1)}
+LHS_B_coef<-LHS_coef[-1]#extract the B coefficients of RHS and store it into a matrix
+LHS_B_coef_length=length( LHS_B_coef)
+if(LHS_B_coef_length!=npi){
+zero_mat1<- matrix( rep(0,npi),nrow=npi, ncol=1)
+for (i in 1:LHS_B_coef_length){
+zero_mat1[i,1]<-LHS_B_coef[i]
+i=i+1
+}
+LHS1<-zero_mat1
+}else {LHS1<-as.matrix(LHS_B_coef)}
+length_ma_c=length(ma_c)
+
+
+if(length_ma_c!=npi){
+zero_mat2 <- matrix( rep(0,npi),nrow=npi, ncol=1)
+for (i in 1:length_ma_c){
+zero_mat2[i,1]<-ma_c[i]
+i=i+1
+}
+RHS1<-zero_mat2
+}else {RHS1<-as.matrix(ma_c)}
+#Coefficient matrix
+con_mat=RHS1+LHS1
+#pi coefficient mat
+pi<-diag(-1,npi,npi)
+k=2
+for (i in 1: length_ma_c){
+for(j in k:npi){
+pi[j,j-i]<-ma_c[i]
+}
+k=k+1
+}
+#values of pi coefficients
+solve(pi)%*%con_mat
+}
+
+```
+
+```{r}
+convetARMAorARIMA(d=1,ar_c=c(-0.3),ma_c=(0.5),npi=100)
+
+```
+
+```{r}
+library(ggplot2)
+pi1<-convetARMAorARIMA(d=1,ar_c=c(-0.3),ma_c=(0.5),npi=100)
+index<-1:100
+dfr1<-data.frame(pi1,index)
+ggplot(dfr1,aes(index,pi1))+geom_point(color="firebrick")+geom_line(color="blue")+
+labs(y= "pi weights")+
+labs(title="Plot of pi weights for ARIMA(1,1,1) with phi=-0.3, theta = 0.5")
+
+```
+
+```{r}
+convetARMAorARIMA(d=1,ar_c=c(0),ma_c=(0.7),npi=100)
+
+```
+
+```{r}
+pi1<-convetARMAorARIMA(d=1,ar_c=c(0),ma_c=(0.7),npi=100)
+index<-1:100
+dfr1<-data.frame(pi1,index)
+ggplot(dfr1,aes(index,pi1))+geom_point(color="firebrick")+geom_line(color="blue")+
+labs(y="pi weights")+labs(title="Plot of pi weights for ARIMA(0,1,1) with psi=0, theta = 0.7")
+
+```
+
+```{r}
+convetARMAorARIMA(d=1,ar_c=c(0.5,0.2),ma_c=(0.5),npi=100)
+```
+
+```{r}
+pi1<-convetARMAorARIMA(d=1,ar_c=c(0.5,0.2),ma_c=(0.5),npi=100)
+index<-1:100
+dfr1<-data.frame(pi1,index)
+ggplot(dfr1,aes(index,pi1))+geom_point(color="firebrick")+geom_line(color="blue")+
+labs(y="pi weights")+
+labs(title="Plot of pi weights for ARIMA(2,1,1) with phi_1=0.5, phi_2=0.2 and theta=0.5
+")
+
+```
+
+```{r}
+convetARMAorARIMA(d=0,ar_c=c(0),ma_c=c(0.7,0.5),npi=100)
+```
+
+```{r}
+pi1<-convetARMAorARIMA(d=0,ar_c=c(0),ma_c=c(0.7,0.5),npi=100)
+index<-1:100
+dfr1<-data.frame(pi1,index)
+ggplot(dfr1,aes(index,pi1))+geom_point(color="firebrick")+geom_line(color="blue")+
+labs(y="pi weights") +
+labs(title="Plot of pi weights for ARIMA(0,0,2) process with theta1=0.7 and theta2=0.5
+")
+
+```
+
+```{r}
+polynomial(c(1,-0.7,-0.5))
+
+```
+
+```{r}
+polyroot(c(1,-0.7,-0.5))
+```
+
+```{r}
+convetARMAorARIMA(d=0,ar_c=c(0),ma_c=c(0.1,0.5),npi=100)
+
+```
+
+```{r}
+pi1<-convetARMAorARIMA(d=0,ar_c=c(0),ma_c=c(0.1,0.5),npi=100)
+index<-1:100
+dfr1<-data.frame(pi1,index)
+ggplot(dfr1,aes(index,pi1))+geom_point(color="firebrick")+geom_line(color="blue")+
+labs(y="pi weights")+
+labs(title="Plot of pi weights for ARIMA(0,0,2) process with theta1=0.1 and theta2=0.5 ")
+```
+
+```{r}
+polynomial(c(1,-0.1,-0.5))
+
+```
+
+```{r}
+polyroot(c(1,-0.1,-0.5))
+```
+
+# Random walk model
+
+```{r}
+convetARMAorARIMA(d=1,ar_c=c(0),ma_c=c(0),npi=100)
+
+```
+
+```{r}
+pi1<-convetARMAorARIMA(d=1,ar_c=c(0),ma_c=c(0),npi=100)
+index<-1:100
+dfr1<-data.frame(pi1,index)
+ggplot(dfr1,aes(index,pi1))+geom_point(color="firebrick")+geom_line(color="blue")+
+labs(y="pi weights")+labs(title="Plot of pi weights of random walk model")
+```
+
+# White noise process
+```{r}
+convetARMAorARIMA(d=0,ar_c=c(0),ma_c=c(0),npi=100)
+
+```
+
+```{r}
+library(ggplot2)
+pi1<-convetARMAorARIMA(d=0,ar_c=c(0),ma_c=c(0),npi=100)
+index<-1:100
+dfr1<-data.frame(pi1,index)
+ggplot(dfr1,aes(index,pi1))+geom_point(color="firebrick")+geom_line(color="blue")+
+labs(y="pi weights")+labs(title="White noise process")
+
+```
+
+# ARIMA(1,0,0)
+
+```{r}
+pi1<-convetARMAorARIMA(d=0,ar_c=c(-0.9),ma_c=c(0),npi=100)
+pi2<-convetARMAorARIMA(d=0,ar_c=c(-0.5),ma_c=c(0),npi=100)
+pi3<-convetARMAorARIMA(d=0,ar_c=c(0.5),ma_c=c(0),npi=100)
+pi4<-convetARMAorARIMA(d=0,ar_c=c(0.9),ma_c=c(0),npi=100)
+index<-1:100
+dfr1<-data.frame(pi1,pi2,pi3,pi4,index)
+ggplot(dfr1,aes(index,y))+
+geom_point(aes(y=pi1,color="-0.9"))+geom_line(aes(y=pi1,color="-0.9"))+
+geom_point(aes(y=pi2,color="-0.5"))+geom_line(aes(y=pi2,color="-0.5"))+
+geom_point(aes(y=pi3,color="0.5"))+geom_line(aes(y=pi3,color="0.5"))+
+geom_point(aes(y=pi4,color="0.9"))+geom_line(aes(y=pi4,color="0.9"))+
+labs(y="pi weights")+labs(title="Plot of pi weights of ARIMA(1,0,0) " ,color = "AR(1) coefficient\n")
+
+```
+
+# ARIMA(1,1,0)
+
+```{r}
+pi2<-convetARMAorARIMA(d=1,ar_c=c(-0.5),ma_c=c(0),npi=100)
+pi3<-convetARMAorARIMA(d=1,ar_c=c(0.5),ma_c=c(0),npi=100)
+pi4<-convetARMAorARIMA(d=1,ar_c=c(0.9),ma_c=c(0),npi=100)
+index<-1:100
+dfr1<-data.frame(pi1,pi2,pi3,pi4,index)
+ggplot(dfr1,aes(index,y))+
+geom_point(aes(y=pi1,color="-0.9"))+geom_line(aes(y=pi1,color="-0.9"))+
+geom_point(aes(y=pi2,color="-0.5"))+geom_line(aes(y=pi2,color="-0.5"))+
+geom_point(aes(y=pi3,color="0.5"))+geom_line(aes(y=pi3,color="0.5"))+
+geom_point(aes(y=pi4,color="0.9"))+geom_line(aes(y=pi4,color="0.9"))+
+labs(y="pi weights")+labs(title="Plot of pi weights of ARIMA(1,1,0)
+",color = "AR(1) coefficient\n")
+
+```
+
+# ARIMA(1,1,1)
+
+```{r}
+pi1<-convetARMAorARIMA(d=1,ar_c=c(-0.9),ma_c=c(0.1),npi=100)
+pi2<-convetARMAorARIMA(d=1,ar_c=c(-0.5),ma_c=c(0.1),npi=100)
+pi3<-convetARMAorARIMA(d=1,ar_c=c(0.5),ma_c=c(0.1),npi=100)
+pi4<-convetARMAorARIMA(d=1,ar_c=c(0.9),ma_c=c(0.1),npi=100)
+index<-1:100
+dfr1<-data.frame(pi1,pi2,pi3,pi4,index)
+ggplot(dfr1,aes(index,y))+
+geom_point(aes(y=pi1,color="-0.9"))+geom_line(aes(y=pi1,color="-0.9"))+
+geom_point(aes(y=pi2,color="-0.5"))+geom_line(aes(y=pi2,color="-0.5"))+
+geom_point(aes(y=pi3,color="0.5"))+geom_line(aes(y=pi3,color="0.5"))+
+geom_point(aes(y=pi4,color="0.9"))+geom_line(aes(y=pi4,color="0.9"))+
+labs(y="pi weights")+labs(title="Plot of pi weights of ARIMA(1,1,1) ", color = "phi coefficient\n")
+
+```
+
+# ARIMA(0,1,1)
+
+```{r}
+
+
+```
